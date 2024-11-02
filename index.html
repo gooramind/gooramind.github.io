@@ -20,21 +20,27 @@
       font-size: 16px;
       cursor: pointer;
     }
+
+    .error-message {
+      color: red;
+      margin-top: 10px;
+    }
   </style>
+  
+  <!-- Firebase App (the core Firebase SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <!-- Firebase Auth -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
   
   <div id="loginButtonContainer">
     <button onclick="googleSignIn()">Sign in with Google</button>
+    <div id="errorMessage" class="error-message"></div>
   </div>
 
-  <!-- Import Firebase using the new modular v9 syntax -->
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js';
-    import { getAuth, signInWithPopup, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js';
-
+  <script>
     // Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBAdbPhKDmCuTcaMzUxHvstrc5zzFtNt9c",
@@ -47,14 +53,24 @@ const firebaseConfig = {
   };
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+    firebase.initializeApp(firebaseConfig);
 
-    // Make googleSignIn function available globally
-    window.googleSignIn = async function() {
+    // Function to display error messages
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      console.error(message);
+    }
+
+    // Google Sign In Function
+    async function googleSignIn() {
       try {
-        const result = await signInWithPopup(auth, provider);
+        // Clear any previous error messages
+        document.getElementById('errorMessage').textContent = '';
+
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const result = await firebase.auth().signInWithPopup(provider);
+        
         // Get ID token
         const idToken = await result.user.getIdToken();
         
@@ -72,16 +88,34 @@ const firebaseConfig = {
           alert("Google 로그인 성공");
           // Additional actions after successful login
         } else {
-          console.error("Firebase authentication failed:", data);
-          alert("로그인 실패: Firebase 인증 오류");
+          showError("인증 실패: " + (data.error || "알 수 없는 오류가 발생했습니다"));
         }
       } catch (error) {
-        console.error("Google login error:", error);
-        alert("로그인 실패");
+        let errorMessage = "로그인 실패";
+        
+        // Handle specific Firebase errors
+        if (error.code === 'auth/popup-blocked') {
+          errorMessage = "팝업이 차단되었습니다. 팝업 차단을 해제해주세요.";
+        } else if (error.code === 'auth/cancelled-popup-request') {
+          errorMessage = "로그인이 취소되었습니다.";
+        } else if (error.code === 'auth/popup-closed-by-user') {
+          errorMessage = "로그인 창이 닫혔습니다.";
+        } else if (error.code === 'auth/unauthorized-domain') {
+          errorMessage = "이 도메인에서의 로그인이 허용되지 않았습니다. Firebase Console에서 도메인을 추가해주세요.";
+        }
+        
+        showError(errorMessage);
       }
-    };
+    }
+
+    // Check if Firebase is properly initialized
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        console.log('User is signed in:', user.email);
+      } else {
+        console.log('No user is signed in.');
+      }
+    });
   </script>
-  
-  <script src="game.js"></script>
 </body>
 </html>
