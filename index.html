@@ -8,25 +8,34 @@
     canvas { border: 1px solid black; width: 100%; height: 100%; }
     #gameUI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
   </style>
-  <!-- Firebase 초기 설정 -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js"></script>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
   <script>
-    // Firebase 초기화
-    const firebaseConfig = {
-    apiKey: "AIzaSyBAdbPhKDmCuTcaMzUxHvstrc5zzFtNt9c",
-    authDomain: "project-victoria-ead31.firebaseapp.com",
-    projectId: "project-victoria-ead31",
-    storageBucket: "project-victoria-ead31.firebasestorage.app",
-    messagingSenderId: "987936519895",
-    appId: "1:987936519895:web:b3ab4ca7ec25d7d7c5a292",
-    measurementId: "G-YTBNKCTXK8"
-  };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+    // Cloudflare Worker URL
+    const WORKER_URL = 'https://your-worker-name.username.workers.dev/auth';
+
+    // 예시: 사용자 인증 요청 보내기 (Firebase Auth를 통한 로그인)
+    async function signInWithWorker(token) {
+      const response = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token }) // token을 Cloudflare Worker로 전달
+      });
+
+      const data = await response.json();
+      console.log("Authenticated user:", data);
+      return data;
+    }
+
+    // 예제 함수: 로그인 시도
+    async function login() {
+      const customToken = "YOUR_CUSTOM_TOKEN";  // 사용자 인증에 필요한 토큰 예시
+      const userData = await signInWithWorker(customToken);
+      console.log("Logged in user data:", userData);
+    }
+
+    login(); // 로그인 함수 호출
   </script>
   <script src="game.js"></script>
 </body>
