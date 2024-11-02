@@ -7,15 +7,49 @@
   <style>
     canvas { border: 1px solid black; width: 100%; height: 100%; }
     #gameUI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    
+    /* 로그인 버튼 스타일 */
+    #loginButtonContainer {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+    }
+    
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
+  
+  <!-- Firebase SDK 추가 -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js"></script>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
-  <button onclick="googleSignIn()">Sign in with Google</button> <!-- Google 로그인 버튼 -->
+  
+  <!-- Google 로그인 버튼을 감싸는 컨테이너 -->
+  <div id="loginButtonContainer">
+    <button onclick="googleSignIn()">Sign in with Google</button> <!-- Google 로그인 버튼 -->
+  </div>
 
   <script>
+    // Firebase 앱 초기화
+const firebaseConfig = {
+    apiKey: "AIzaSyBAdbPhKDmCuTcaMzUxHvstrc5zzFtNt9c",
+    authDomain: "project-victoria-ead31.firebaseapp.com",
+    projectId: "project-victoria-ead31",
+    storageBucket: "project-victoria-ead31.firebasestorage.app",
+    messagingSenderId: "987936519895",
+    appId: "1:987936519895:web:b3ab4ca7ec25d7d7c5a292",
+    measurementId: "G-YTBNKCTXK8""
+    };
+    firebase.initializeApp(firebaseConfig);
+
     // Cloudflare Worker URL
-const WORKER_URL = 'https://victoria.su65661701.workers.dev/auth';
+    const WORKER_URL = 'https://victoria.su65661701.workers.dev/auth'; // 실제 Worker URL로 변경
 
     // Google 로그인 함수
     async function googleSignIn() {
@@ -50,6 +84,7 @@ const WORKER_URL = 'https://victoria.su65661701.workers.dev/auth';
       }
     }
   </script>
+  
   <script src="game.js"></script> <!-- 게임 관련 스크립트 -->
 </body>
 </html>
