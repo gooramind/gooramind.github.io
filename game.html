@@ -1,0 +1,62 @@
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let currentScreen = "start"; // 현재 화면 상태
+
+    function drawStartScreen() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 캐릭터들 표시 (임시 이미지로 대체)
+        ctx.font = "30px Arial";
+        ctx.fillText("캐릭터들 등장!", 250, 200);
+
+        // 게임 시작 버튼
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(300, 350, 200, 50);
+        ctx.fillStyle = "black";
+        ctx.font = "20px Arial";
+        ctx.fillText("게임 시작", 340, 380);
+    }
+
+    function drawLobbyScreen() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 대기실 상단 덱 슬롯
+        ctx.font = "20px Arial";
+        ctx.fillText("덱 슬롯:", 50, 50);
+        for (let i = 0; i < 5; i++) {
+            ctx.strokeRect(100 + i * 120, 30, 100, 100);
+        }
+
+        // 하단 캐릭터 카드 목록
+        ctx.fillText("전체 캐릭터 카드", 50, 180);
+        for (let i = 0; i < 5; i++) {
+            ctx.fillStyle = "lightblue";
+            ctx.fillRect(100 + i * 120, 200, 100, 100); // 캐릭터 카드
+        }
+
+        // 배틀 스타트 버튼
+        ctx.fillStyle = "red";
+        ctx.fillRect(650, 20, 120, 40);
+        ctx.fillStyle = "white";
+        ctx.fillText("배틀 스타트", 660, 45);
+    }
+
+    // 이벤트 핸들러 추가
+    canvas.addEventListener("click", (e) => {
+        const x = e.offsetX;
+        const y = e.offsetY;
+
+        if (currentScreen === "start" && x > 300 && x < 500 && y > 350 && y < 400) {
+            currentScreen = "lobby";
+            drawLobbyScreen();
+        } else if (currentScreen === "lobby" && x > 650 && x < 770 && y > 20 && y < 60) {
+            alert("배틀 화면으로 전환됩니다.");
+            // 배틀 화면 전환 함수 호출 예정
+        }
+    });
+
+    drawStartScreen();
+</script>
