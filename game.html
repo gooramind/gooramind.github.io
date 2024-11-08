@@ -4,11 +4,31 @@
     const ctx = canvas.getContext("2d");
 
     let currentScreen = "start"; // 현재 화면 상태
+    const characterNames = [
+        'archer', 'artist', 'biker', 'boxer',
+        'doctor', 'giant', 'knight', 'lifeguard',
+        'magician', 'scientist', 'shield', 'viking'
+    ];
+    const characterImages = {};
+
+    // 이미지 로드
+    function loadImages(callback) {
+        let loadedImages = 0;
+        characterNames.forEach(name => {
+            const img = new Image();
+            img.src = `https://gooramind.github.io/img/${name}.webp`;
+            img.onload = () => {
+                characterImages[name] = img;
+                loadedImages++;
+                if (loadedImages === characterNames.length) callback();
+            };
+        });
+    }
 
     function drawStartScreen() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // 캐릭터들 표시 (임시 이미지로 대체)
+        
+        // 캐릭터들 표시 (임시 텍스트로 대체)
         ctx.font = "30px Arial";
         ctx.fillText("캐릭터들 등장!", 250, 200);
 
@@ -22,7 +42,7 @@
 
     function drawLobbyScreen() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+        
         // 대기실 상단 덱 슬롯
         ctx.font = "20px Arial";
         ctx.fillText("덱 슬롯:", 50, 50);
@@ -32,10 +52,11 @@
 
         // 하단 캐릭터 카드 목록
         ctx.fillText("전체 캐릭터 카드", 50, 180);
-        for (let i = 0; i < 5; i++) {
-            ctx.fillStyle = "lightblue";
-            ctx.fillRect(100 + i * 120, 200, 100, 100); // 캐릭터 카드
-        }
+        characterNames.forEach((name, index) => {
+            const x = 100 + (index % 6) * 120; // 각 카드의 X 좌표
+            const y = 200 + Math.floor(index / 6) * 120; // 각 카드의 Y 좌표
+            ctx.drawImage(characterImages[name], x, y, 100, 100); // 캐릭터 이미지 그리기
+        });
 
         // 배틀 스타트 버튼
         ctx.fillStyle = "red";
@@ -58,5 +79,6 @@
         }
     });
 
-    drawStartScreen();
+    // 이미지 로드 후 시작 화면 표시
+    loadImages(drawStartScreen);
 </script>
