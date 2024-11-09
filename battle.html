@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #ui-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        .card {
+            width: 80px;
+            height: 100px;
+            background-color: rgba(100, 100, 100, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            font-size: 14px;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        .card img {
+            width: 80%;
+            height: auto;
+            opacity: 0.3; /* 비활성화 상태 */
+        }
+        .card.active img {
+            opacity: 1; /* 활성화 상태 */
+        }
+        .cooldown-bar {
+            width: 100%;
+            height: 5px;
+            background-color: rgba(0, 0, 0, 0.3);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+        .cooldown-bar div {
+            height: 100%;
+            background-color: green;
+        }
+        #gold-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <div id="gold-display">골드: 0</div>
+    <div id="ui-container"></div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // 게임 상태
+        let gold = 0;
+        let cards = [
+            { name: "캐릭터1", cost: 100, cooldown: 3, img: "https://doopyo85.github.io/img/archer.webp", isActive: false, cooldownTimeLeft: 0 },
+            { name: "캐릭터2", cost: 200, cooldown: 5, img: "https://doopyo85.github.io/img/knight.webp", isActive: false, cooldownTimeLeft: 0 },
+            { name: "캐릭터3", cost: 300, cooldown: 4, img: "https://doopyo85.github.io/img/magician.webp", isActive: false, cooldownTimeLeft: 0 },
+            { name: "캐릭터4", cost: 400, cooldown: 6, img: "https://doopyo85.github.io/img/artist.webp", isActive: false, cooldownTimeLeft: 0 },
+            { name: "캐릭터5", cost: 500, cooldown: 7, img: "https://doopyo85.github.io/img/doctor.webp", isActive: false, cooldownTimeLeft: 0 }
+        ];
+
+        // UI 요소 설정
+        const uiContainer = document.getElementById("ui-container");
+        cards.forEach((card, index) => {
+            const cardElement = document.createElement("div");
+            cardElement.classList.add("card");
+            cardElement.innerHTML = `
+                <img src="${card.img}" alt="${card.name}">
+                <span>${card.name}</span>
+                <span>${card.cost}원</span>
+                <div class="cooldown-bar"><div></div></div>
+            `;
+            cardElement.addEventListener("click", () => onCardClick(index));
+            uiContainer.appendChild(cardElement);
+            card.element = cardElement;
+        });
+
+        // 캐릭터 카드 클릭 핸들러
+        function onCardClick(index) {
+            const card = cards[index];
+            if (gold >= card.cost && card.cooldownTimeLeft <= 0) {
+                gold -= card.cost;
+                card.cooldownTimeLeft = card.cooldown;
+                updateGoldDisplay();
+                spawnCharacter(card);
+            }
+        }
+
+        // 캐릭터 소환 함수
+        function spawnCharacter(card) {
+            console.log(`${card.name} 소환!`);
+            // 여기서 실제 캐릭터 객체를 생성하여 맵에 추가하는 로직을 구현할 수 있음
+        }
+
+        // 골드 증가 및 표시 함수
+        function updateGold() {
+            gold += 30;
+            updateGoldDisplay();
+        }
+
+        function updateGoldDisplay() {
+            document.getElementById("gold-display").textContent = `골드: ${gold}`;
+            updateCardStates();
+        }
+
+        // 카드 활성화/비활성화 업데이트
+        function updateCardStates() {
+            cards.forEach((card) => {
+                if (gold >= card.cost && card.cooldownTimeLeft <= 0) {
+                    card.element.classList.add("active");
+                } else {
+                    card.element.classList.remove("active");
+                }
+            });
+        }
+
+        // 쿨타임 업데이트
+        function updateCooldowns() {
+            cards.forEach((card) => {
+                if (card.cooldownTimeLeft > 0) {
+                    card.cooldownTimeLeft -= 0.1;
+                    const cooldownRatio = card.cooldownTimeLeft / card.cooldown;
+                    card.element.querySelector(".cooldown-bar div").style.width = `${cooldownRatio * 100}%`;
+                    if (card.cooldownTimeLeft <= 0) {
+                        card.cooldownTimeLeft = 0;
+                    }
+                }
+            });
+        }
+
+        // 게임 루프
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 배경 및 성 그리기
+            drawBackground();
+            drawCastles();
+
+            // 골드 및 쿨타임 업데이트
+            updateCooldowns();
+        }
+
+        // 배경 그리기 함수
+        let backgroundX = 0;
+        function drawBackground() {
+            backgroundX -= 1;
+            ctx.fillStyle = "lightblue";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "green";
+            ctx.fillRect(0, 300, canvas.width, 100);
+            ctx.save();
+            ctx.translate(backgroundX, 0);
+
+            // 임의의 나무 그리기
+            for (let i = 0; i < 20; i++) {
+                ctx.fillStyle = "darkgreen";
+                ctx.fillRect(200 * i, 250, 50, 50);
+            }
+            ctx.restore();
+            if (backgroundX <= -200) backgroundX = 0;
+        }
+
+        // 성 그리기 함수
+        function drawCastles() {
+            ctx.fillStyle = "black";
+            ctx.fillRect(50, 200, 50, 100); // 아군 성
+            ctx.fillStyle = "red";
+            ctx.fillRect(canvas.width - 100, 200, 50, 100); // 적군 성
+        }
+
+        // 골드 증가 타이머
+        setInterval(updateGold, 1000);
+
+        // 게임 루프 시작
+        setInterval(gameLoop, 100);
+    </script>
+</body>
+</html>
