@@ -1,34 +1,47 @@
 <canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="tooltip" style="display:none; position:absolute; background:rgba(0, 0, 0, 0.7); color:white; padding:10px; border-radius:5px; font-size:14px;"></div>
+
 <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    const tooltip = document.getElementById("tooltip");
 
     let currentScreen = "start"; // 현재 화면 상태
-    const characterNames = [
-        'archer', 'artist', 'biker', 'boxer',
-        'doctor', 'giant', 'knight', 'lifeguard',
-        'magician', 'scientist', 'shield', 'viking'
+
+    // 캐릭터 정보 데이터 (이미지 이름 포함)
+    const characterData = [
+        { name: "아처", imageName: "archer", concept: "활에서 화살이 나감", attack: 1700, health: 2000, range: 400, speed: 10 },
+        { name: "아티스트", imageName: "artist", concept: "물감의 색을 정함", attack: 1000, health: 3000, range: 375, speed: 12 },
+        { name: "폭주족", imageName: "biker", concept: "오토바이로 적을 들이박음", attack: 700, health: 1000, range: "150 ~ 0", speed: 20 },
+        { name: "복서", imageName: "boxer", concept: "원투 3타로 스트레이트 주먹 공격", attack: "50, 50, 500", health: 3000, range: 250, speed: 13 },
+        { name: "박사", imageName: "doctor", concept: "책을 읽는다", attack: 0, health: 500, range: 0, speed: 0 },
+        { name: "자이언트", imageName: "giant", concept: "양손을 들어 공격", attack: 1200, health: 10000, range: "250 ~ -250", speed: 10 },
+        { name: "나이트", imageName: "knight", concept: "칼을 휘두르며 공격", attack: 700, health: 6000, range: 200, speed: 15 },
+        { name: "안전요원", imageName: "lifeguard", concept: "메가폰으로 공격", attack: 200, health: 1000, range: "450 ~ 0", speed: 14 },
+        { name: "마법사", imageName: "magician", concept: "지팡이로 파이어볼 공격", attack: 1200, health: 2500, range: 425, speed: 12 },
+        { name: "사이언티스트", imageName: "scientist", concept: "약품을 사용", attack: 0, health: 800, range: 10, speed: 2 },
+        { name: "방패병", imageName: "shield", concept: "방패로 공격", attack: 300, health: 10000, range: 150, speed: 12 },
+        { name: "바이킹", imageName: "viking", concept: "도끼로 공격", attack: 1200, health: 4000, range: 150, speed: 18 }
     ];
+
     const characterImages = {};
 
     // 이미지 로드
     function loadImages(callback) {
         let loadedImages = 0;
-        characterNames.forEach(name => {
+        characterData.forEach(character => {
             const img = new Image();
-            img.src = `https://gooramind.github.io/img/${name}.webp`;
+            img.src = `https://doopyo85.github.io/img/${character.imageName}.webp`;
             img.onload = () => {
-                characterImages[name] = img;
+                characterImages[character.imageName] = img;
                 loadedImages++;
-                if (loadedImages === characterNames.length) callback();
+                if (loadedImages === characterData.length) callback();
             };
         });
     }
 
     function drawStartScreen() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // 캐릭터들 표시 (임시 텍스트로 대체)
         ctx.font = "30px Arial";
         ctx.fillText("캐릭터들 등장!", 250, 200);
 
@@ -43,7 +56,7 @@
     function drawLobbyScreen() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 대기실 상단 덱 슬롯
+        // 덱 슬롯
         ctx.font = "20px Arial";
         ctx.fillText("덱 슬롯:", 50, 50);
         for (let i = 0; i < 5; i++) {
@@ -52,10 +65,13 @@
 
         // 하단 캐릭터 카드 목록
         ctx.fillText("전체 캐릭터 카드", 50, 180);
-        characterNames.forEach((name, index) => {
-            const x = 100 + (index % 6) * 120; // 각 카드의 X 좌표
-            const y = 200 + Math.floor(index / 6) * 120; // 각 카드의 Y 좌표
-            ctx.drawImage(characterImages[name], x, y, 100, 100); // 캐릭터 이미지 그리기
+        characterData.forEach((character, index) => {
+            const x = 100 + (index % 6) * 120;
+            const y = 200 + Math.floor(index / 6) * 120;
+            const img = characterImages[character.imageName];
+            if (img) {
+                ctx.drawImage(img, x, y, 100, 100);
+            }
         });
 
         // 배틀 스타트 버튼
@@ -65,7 +81,36 @@
         ctx.fillText("배틀 스타트", 660, 45);
     }
 
-    // 이벤트 핸들러 추가
+    // 마우스 오버 시 캐릭터 카드 정보 툴팁 표시
+    canvas.addEventListener("mousemove", (e) => {
+        const x = e.offsetX;
+        const y = e.offsetY;
+        tooltip.style.display = "none"; // 기본적으로 툴팁 숨김
+
+        if (currentScreen === "lobby") {
+            characterData.forEach((character, index) => {
+                const cardX = 100 + (index % 6) * 120;
+                const cardY = 200 + Math.floor(index / 6) * 120;
+
+                // 마우스가 캐릭터 카드 위에 있는 경우
+                if (x > cardX && x < cardX + 100 && y > cardY && y < cardY + 100) {
+                    tooltip.style.display = "block";
+                    tooltip.style.left = `${e.pageX + 10}px`;
+                    tooltip.style.top = `${e.pageY + 10}px`;
+                    tooltip.innerHTML = `
+                        <strong>${character.name}</strong><br>
+                        컨셉: ${character.concept}<br>
+                        공격력: ${character.attack}<br>
+                        체력: ${character.health}<br>
+                        사거리: ${character.range}<br>
+                        속도: ${character.speed}
+                    `;
+                }
+            });
+        }
+    });
+
+    // 클릭 이벤트: 시작 화면에서 대기실로 전환
     canvas.addEventListener("click", (e) => {
         const x = e.offsetX;
         const y = e.offsetY;
@@ -75,7 +120,6 @@
             drawLobbyScreen();
         } else if (currentScreen === "lobby" && x > 650 && x < 770 && y > 20 && y < 60) {
             alert("배틀 화면으로 전환됩니다.");
-            // 배틀 화면 전환 함수 호출 예정
         }
     });
 
