@@ -112,6 +112,7 @@
         } else if (currentScreen === "lobby") {
             if (x > 650 && x < 770 && y > 20 && y < 60) {
                 alert("배틀 화면으로 전환됩니다.");
+                location.href = "battle.html"; // battle.html로 이동
             }
 
             for (let i = 0; i < maxDeckSlots; i++) {
