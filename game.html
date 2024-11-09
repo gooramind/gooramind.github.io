@@ -6,9 +6,9 @@
     const ctx = canvas.getContext("2d");
     const tooltip = document.getElementById("tooltip");
 
-    let currentScreen = "start"; // 현재 화면 상태
-
-    // 캐릭터 정보 데이터 (이미지 이름 포함)
+    let currentScreen = "start";
+    const maxDeckSlots = 5;
+    const deckSlots = Array(maxDeckSlots).fill(null);
     const characterData = [
         { name: "아처", imageName: "archer", concept: "활에서 화살이 나감", attack: 1700, health: 2000, range: 400, speed: 10 },
         { name: "아티스트", imageName: "artist", concept: "물감의 색을 정함", attack: 1000, health: 3000, range: 375, speed: 12 },
@@ -26,7 +26,6 @@
 
     const characterImages = {};
 
-    // 이미지 로드
     function loadImages(callback) {
         let loadedImages = 0;
         characterData.forEach(character => {
@@ -44,8 +43,6 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.font = "30px Arial";
         ctx.fillText("캐릭터들 등장!", 250, 200);
-
-        // 게임 시작 버튼
         ctx.fillStyle = "yellow";
         ctx.fillRect(300, 350, 200, 50);
         ctx.fillStyle = "black";
@@ -56,15 +53,26 @@
     function drawLobbyScreen() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 덱 슬롯
+        // 상단 덱 슬롯 텍스트
         ctx.font = "20px Arial";
+        ctx.fillStyle = "black";
         ctx.fillText("덱 슬롯:", 50, 50);
-        for (let i = 0; i < 5; i++) {
-            ctx.strokeRect(100 + i * 120, 30, 100, 100);
+
+        // 하단 캐릭터 카드 텍스트
+        ctx.fillText("전체 캐릭터 카드", 50, 180);
+
+        // 상단 덱 슬롯
+        for (let i = 0; i < maxDeckSlots; i++) {
+            const slotX = 100 + i * 120;
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(slotX, 30, 100, 100);
+            if (deckSlots[i]) {
+                const img = characterImages[deckSlots[i].imageName];
+                if (img) ctx.drawImage(img, slotX, 30, 100, 100);
+            }
         }
 
         // 하단 캐릭터 카드 목록
-        ctx.fillText("전체 캐릭터 카드", 50, 180);
         characterData.forEach((character, index) => {
             const x = 100 + (index % 6) * 120;
             const y = 200 + Math.floor(index / 6) * 120;
@@ -81,18 +89,58 @@
         ctx.fillText("배틀 스타트", 660, 45);
     }
 
-    // 마우스 오버 시 캐릭터 카드 정보 툴팁 표시
+    function addToDeck(character) {
+        const emptySlotIndex = deckSlots.findIndex(slot => slot === null);
+        if (emptySlotIndex !== -1) {
+            deckSlots[emptySlotIndex] = character;
+            drawLobbyScreen();
+        }
+    }
+
+    function removeFromDeck(slotIndex) {
+        deckSlots[slotIndex] = null;
+        drawLobbyScreen();
+    }
+
+    canvas.addEventListener("click", (e) => {
+        const x = e.offsetX;
+        const y = e.offsetY;
+
+        if (currentScreen === "start" && x > 300 && x < 500 && y > 350 && y < 400) {
+            currentScreen = "lobby";
+            drawLobbyScreen();
+        } else if (currentScreen === "lobby") {
+            if (x > 650 && x < 770 && y > 20 && y < 60) {
+                alert("배틀 화면으로 전환됩니다.");
+            }
+
+            for (let i = 0; i < maxDeckSlots; i++) {
+                const slotX = 100 + i * 120;
+                if (x > slotX && x < slotX + 100 && y > 30 && y < 130 && deckSlots[i]) {
+                    removeFromDeck(i);
+                    return;
+                }
+            }
+
+            characterData.forEach((character, index) => {
+                const cardX = 100 + (index % 6) * 120;
+                const cardY = 200 + Math.floor(index / 6) * 120;
+                if (x > cardX && x < cardX + 100 && y > cardY && y < cardY + 100) {
+                    addToDeck(character);
+                }
+            });
+        }
+    });
+
     canvas.addEventListener("mousemove", (e) => {
         const x = e.offsetX;
         const y = e.offsetY;
-        tooltip.style.display = "none"; // 기본적으로 툴팁 숨김
+        tooltip.style.display = "none";
 
         if (currentScreen === "lobby") {
             characterData.forEach((character, index) => {
                 const cardX = 100 + (index % 6) * 120;
                 const cardY = 200 + Math.floor(index / 6) * 120;
-
-                // 마우스가 캐릭터 카드 위에 있는 경우
                 if (x > cardX && x < cardX + 100 && y > cardY && y < cardY + 100) {
                     tooltip.style.display = "block";
                     tooltip.style.left = `${e.pageX + 10}px`;
@@ -110,19 +158,5 @@
         }
     });
 
-    // 클릭 이벤트: 시작 화면에서 대기실로 전환
-    canvas.addEventListener("click", (e) => {
-        const x = e.offsetX;
-        const y = e.offsetY;
-
-        if (currentScreen === "start" && x > 300 && x < 500 && y > 350 && y < 400) {
-            currentScreen = "lobby";
-            drawLobbyScreen();
-        } else if (currentScreen === "lobby" && x > 650 && x < 770 && y > 20 && y < 60) {
-            alert("배틀 화면으로 전환됩니다.");
-        }
-    });
-
-    // 이미지 로드 후 시작 화면 표시
     loadImages(drawStartScreen);
 </script>
