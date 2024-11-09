@@ -1,24 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Victoria - Google Login</title>
   <style>
-    canvas { border: 1px solid black; width: 100%; height: 100%; }
-    #gameUI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-    
-    #loginButtonContainer {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      z-index: 10;
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background: url('/img/intro.png') no-repeat center center;
+      background-size: cover;
+      overflow: hidden;
     }
     
+    #loginButtonContainer, #gameButtonContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+    }
+
     button {
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
+      margin-top: 10px;
+      width: 150px;
+      border: none;
+      border-radius: 5px;
+      background-color: #4CAF50;
+      color: white;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
     }
 
     .error-message {
@@ -33,12 +55,14 @@
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
-  
   <div id="loginButtonContainer">
     <button id="signInButton">Sign in with Google</button>
     <div id="userInfo" class="user-info"></div>
     <div id="errorMessage" class="error-message"></div>
+  </div>
+  
+  <div id="gameButtonContainer">
+    <button id="startGameButton">게임 시작</button>
   </div>
 
   <script type="module">
@@ -51,15 +75,15 @@
       browserLocalPersistence
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBAdbPhKDmCuTcaMzUxHvstrc5zzFtNt9c",
-    authDomain: "project-victoria-ead31.firebaseapp.com",
-    projectId: "project-victoria-ead31",
-    storageBucket: "project-victoria-ead31.firebasestorage.app",
-    messagingSenderId: "987936519895",
-    appId: "1:987936519895:web:b3ab4ca7ec25d7d7c5a292",
-    measurementId: "G-YTBNKCTXK8"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyAH8LI0wbqsxvpmtfBrNmk-xN76YmQIFCE",
+      authDomain: "project-victoria-df000.firebaseapp.com",
+      projectId: "project-victoria-df000",
+      storageBucket: "project-victoria-df000.firebasestorage.app",
+      messagingSenderId: "368940165865",
+      appId: "1:368940165865:web:f98b60e73b935320a5de78",
+      measurementId: "G-XDX4PMX7KB"
+    };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -69,7 +93,6 @@ const firebaseConfig = {
       prompt: 'select_account'
     });
 
-    // 브라우저 지속성 설정
     await setPersistence(auth, browserLocalPersistence);
 
     function showError(message) {
@@ -93,7 +116,6 @@ const firebaseConfig = {
       const user = auth.currentUser;
       
       if (user) {
-        // 로그아웃
         try {
           await auth.signOut();
           updateUserInfo(null);
@@ -102,78 +124,20 @@ const firebaseConfig = {
           showError('로그아웃 실패: ' + error.message);
         }
       } else {
-        // 로그인
         try {
           document.getElementById('errorMessage').textContent = '';
-          
           const result = await signInWithPopup(auth, provider);
           console.log("Firebase 인증 성공:", result.user);
-          
-          const idToken = await result.user.getIdToken();
-          console.log("ID Token obtained");
-          
-          // Cloudflare Worker로 토큰 전송
-          try {
-            const response = await fetch('https://victoria.doopyo85.su65661701.dev/auth', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ 
-                token: idToken,
-                email: result.user.email
-              })
-            });
-
-            const data = await response.json();
-            console.log("서버 응답:", data);
-            
-            if (response.ok) {
-              console.log("서버 인증 성공:", data);
-              updateUserInfo(result.user);
-              location.href = "lobby.html";
-            } else {
-              throw new Error(data.error || '서버 인증 실패');
-            }
-          } catch (serverError) {
-            console.error("서버 통신 오류:", serverError);
-            // 서버 오류가 발생해도 Firebase 인증은 성공한 것으로 처리
-            updateUserInfo(result.user);
-            location.href = "lobby.html";
-          }
+          updateUserInfo(result.user);
         } catch (error) {
           console.error("로그인 오류:", error);
-          
-          let errorMessage = "로그인 실패";
-          switch (error.code) {
-            case 'auth/popup-blocked':
-              errorMessage = "팝업이 차단되었습니다. 팝업 차단을 해제해주세요.";
-              break;
-            case 'auth/cancelled-popup-request':
-              errorMessage = "로그인이 취소되었습니다.";
-              break;
-            case 'auth/popup-closed-by-user':
-              errorMessage = "로그인 창이 닫혔습니다.";
-              break;
-            case 'auth/unauthorized-domain':
-              errorMessage = "이 도메인에서의 로그인이 허용되지 않았습니다.";
-              break;
-            case 'auth/operation-not-allowed':
-              errorMessage = "Google 로그인이 Firebase Console에서 활성화되지 않았습니다.";
-              break;
-            default:
-              errorMessage = `로그인 오류: ${error.message}`;
-          }
-          
-          showError(errorMessage);
+          showError("로그인 실패: " + error.message);
         }
       }
     }
 
-    // 로그인/로그아웃 버튼 이벤트 리스너
     document.getElementById('signInButton').addEventListener('click', handleAuthOperation);
 
-    // 인증 상태 변경 감지
     auth.onAuthStateChanged((user) => {
       updateUserInfo(user);
       if (user) {
@@ -181,6 +145,11 @@ const firebaseConfig = {
       } else {
         console.log('로그인된 사용자 없음');
       }
+    });
+
+    // 게임 시작 버튼 클릭 시 lobby.html로 이동
+    document.getElementById('startGameButton').addEventListener('click', () => {
+      location.href = "lobby.html";
     });
   </script>
 </body>
