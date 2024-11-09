@@ -131,7 +131,7 @@ const firebaseConfig = {
             if (response.ok) {
               console.log("서버 인증 성공:", data);
               updateUserInfo(result.user);
-              location.href = "game.html";
+              location.href = "lobby.html";
             } else {
               throw new Error(data.error || '서버 인증 실패');
             }
@@ -139,7 +139,7 @@ const firebaseConfig = {
             console.error("서버 통신 오류:", serverError);
             // 서버 오류가 발생해도 Firebase 인증은 성공한 것으로 처리
             updateUserInfo(result.user);
-            location.href = "game.html";
+            location.href = "lobby.html";
           }
         } catch (error) {
           console.error("로그인 오류:", error);
