@@ -70,17 +70,23 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // 게임 상태
+        // 골드 상태
         let gold = 0;
-        let cards = [
-            { name: "캐릭터1", cost: 100, cooldown: 3, img: "https://doopyo85.github.io/img/archer.webp", isActive: false, cooldownTimeLeft: 0 },
-            { name: "캐릭터2", cost: 200, cooldown: 5, img: "https://doopyo85.github.io/img/knight.webp", isActive: false, cooldownTimeLeft: 0 },
-            { name: "캐릭터3", cost: 300, cooldown: 4, img: "https://doopyo85.github.io/img/magician.webp", isActive: false, cooldownTimeLeft: 0 },
-            { name: "캐릭터4", cost: 400, cooldown: 6, img: "https://doopyo85.github.io/img/artist.webp", isActive: false, cooldownTimeLeft: 0 },
-            { name: "캐릭터5", cost: 500, cooldown: 7, img: "https://doopyo85.github.io/img/doctor.webp", isActive: false, cooldownTimeLeft: 0 }
-        ];
 
-        // UI 요소 설정
+        // localStorage에서 덱 데이터 가져오기
+        let selectedDeck = JSON.parse(localStorage.getItem("selectedDeck")) || [];
+
+        // 선택된 덱 데이터를 cards 배열로 변환
+        let cards = selectedDeck.map(card => ({
+            name: card.name,
+            cost: card.cost,
+            cooldown: card.cooldown,
+            img: card.img,
+            isActive: false,
+            cooldownTimeLeft: 0
+        }));
+
+        // UI 설정
         const uiContainer = document.getElementById("ui-container");
         cards.forEach((card, index) => {
             const cardElement = document.createElement("div");
@@ -96,7 +102,6 @@
             card.element = cardElement;
         });
 
-        // 캐릭터 카드 클릭 핸들러
         function onCardClick(index) {
             const card = cards[index];
             if (gold >= card.cost && card.cooldownTimeLeft <= 0) {
@@ -107,13 +112,10 @@
             }
         }
 
-        // 캐릭터 소환 함수
         function spawnCharacter(card) {
             console.log(`${card.name} 소환!`);
-            // 여기서 실제 캐릭터 객체를 생성하여 맵에 추가하는 로직을 구현할 수 있음
         }
 
-        // 골드 증가 및 표시 함수
         function updateGold() {
             gold += 30;
             updateGoldDisplay();
@@ -124,7 +126,6 @@
             updateCardStates();
         }
 
-        // 카드 활성화/비활성화 업데이트
         function updateCardStates() {
             cards.forEach((card) => {
                 if (gold >= card.cost && card.cooldownTimeLeft <= 0) {
@@ -135,7 +136,6 @@
             });
         }
 
-        // 쿨타임 업데이트
         function updateCooldowns() {
             cards.forEach((card) => {
                 if (card.cooldownTimeLeft > 0) {
@@ -149,19 +149,13 @@
             });
         }
 
-        // 게임 루프
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 배경 및 성 그리기
             drawBackground();
             drawCastles();
-
-            // 골드 및 쿨타임 업데이트
             updateCooldowns();
         }
 
-        // 배경 그리기 함수
         let backgroundX = 0;
         function drawBackground() {
             backgroundX -= 1;
@@ -171,8 +165,6 @@
             ctx.fillRect(0, 300, canvas.width, 100);
             ctx.save();
             ctx.translate(backgroundX, 0);
-
-            // 임의의 나무 그리기
             for (let i = 0; i < 20; i++) {
                 ctx.fillStyle = "darkgreen";
                 ctx.fillRect(200 * i, 250, 50, 50);
@@ -181,18 +173,14 @@
             if (backgroundX <= -200) backgroundX = 0;
         }
 
-        // 성 그리기 함수
         function drawCastles() {
             ctx.fillStyle = "black";
-            ctx.fillRect(50, 200, 50, 100); // 아군 성
+            ctx.fillRect(50, 200, 50, 100);
             ctx.fillStyle = "red";
-            ctx.fillRect(canvas.width - 100, 200, 50, 100); // 적군 성
+            ctx.fillRect(canvas.width - 100, 200, 50, 100);
         }
 
-        // 골드 증가 타이머
         setInterval(updateGold, 1000);
-
-        // 게임 루프 시작
         setInterval(gameLoop, 100);
     </script>
 </body>
