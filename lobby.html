@@ -10,19 +10,19 @@
     const maxDeckSlots = 5;
     const deckSlots = Array(maxDeckSlots).fill(null);
     const characterData = [
-        { name: "아처", imageName: "archer", concept: "활에서 화살이 나감", attack: 1700, health: 2000, range: 400, speed: 10 },
-        { name: "아티스트", imageName: "artist", concept: "물감의 색을 정함", attack: 1000, health: 3000, range: 375, speed: 12 },
-        { name: "폭주족", imageName: "biker", concept: "오토바이로 적을 들이박음", attack: 700, health: 1000, range: "150 ~ 0", speed: 20 },
-        { name: "복서", imageName: "boxer", concept: "원투 3타로 스트레이트 주먹 공격", attack: "50, 50, 500", health: 3000, range: 250, speed: 13 },
-        { name: "박사", imageName: "doctor", concept: "책을 읽는다", attack: 0, health: 500, range: 0, speed: 0 },
-        { name: "자이언트", imageName: "giant", concept: "양손을 들어 공격", attack: 1200, health: 10000, range: "250 ~ -250", speed: 10 },
-        { name: "나이트", imageName: "knight", concept: "칼을 휘두르며 공격", attack: 700, health: 6000, range: 200, speed: 15 },
-        { name: "안전요원", imageName: "lifeguard", concept: "메가폰으로 공격", attack: 200, health: 1000, range: "450 ~ 0", speed: 14 },
-        { name: "마법사", imageName: "magician", concept: "지팡이로 파이어볼 공격", attack: 1200, health: 2500, range: 425, speed: 12 },
-        { name: "사이언티스트", imageName: "scientist", concept: "약품을 사용", attack: 0, health: 800, range: 10, speed: 2 },
-        { name: "방패병", imageName: "shield", concept: "방패로 공격", attack: 300, health: 10000, range: 150, speed: 12 },
-        { name: "바이킹", imageName: "viking", concept: "도끼로 공격", attack: 1200, health: 4000, range: 150, speed: 18 }
-    ];
+        { name: "나이트", imageName: "knight", concept: "칼을 휘두르며 공격", attack: 700, health: 6000, range: 200, speed: 15, cost: 2250, cooldown: 30, attackInterval: 1 },
+        { name: "아처", imageName: "archer", concept: "활에서 화살이 나감", attack: 1700, health: 2000, range: 400, speed: 10, cost: 2500, cooldown: 35, attackInterval: 1.5 },
+        { name: "마법사", imageName: "magician", concept: "지팡이를 앞으로 하고 작은 파이어 볼로 공격을 한다", attack: 1200, health: 2500, range: 425, speed: 12, cost: 3000, cooldown: 50, attackInterval: 2.5 },
+        { name: "아티스트", imageName: "artist", concept: "처음 물감의 색을 정함 공격이 끝나면 다시 색을 정하고 그에 맞는 공격을 함", attack: 1000, health: 3000, range: 375, speed: 12, cost: 3000, cooldown: 50, attackInterval: 4.5 },
+        { name: "박사", imageName: "doctor", concept: "책을 읽는다", attack: 0, health: 500, range: 0, speed: 0, cost: 4500, cooldown: 60, attackInterval: 0 },
+        { name: "방패병", imageName: "shield", concept: "방패를 들며 방패로 내려찍으며 공격", attack: 300, health: 10000, range: 150, speed: 12, cost: 3000, cooldown: 35, attackInterval: 1.5 },
+        { name: "바이킹", imageName: "viking", concept: "도끼로 공격", attack: 1200, health: 4000, range: 150, speed: 18, cost: 3250, cooldown: 40, attackInterval: 0.75 },
+        { name: "자이언트", imageName: "giant", concept: "양손을 든다음 내려찍으며 공격", attack: 1200, health: 10000, range: "250 ~ -250", speed: 10, cost: 4000, cooldown: 55, attackInterval: 5 },
+        { name: "안전요원", imageName: "lifeguard", concept: "메가폰을 소리를 지르며 공격", attack: 200, health: 1000, range: "450 ~0", speed: 14, cost: 4000, cooldown: 4, attackInterval: 20 },
+        { name: "폭주족", imageName: "biker", concept: "오토바이로 적을 들이박음", attack: 700, health: 1000, range: "150 ~ 0", speed: 20, cost: 4000, cooldown: 8, attackInterval: 30 },
+        { name: "사이언티스트", imageName: "scientist", concept: "약품을 흔들며 주변에 초록 빛이 돔", attack: 0, health: 800, range: 10, speed: 2, cost: 5000, cooldown: 0.5, attackInterval: 40 },
+        { name: "복서", imageName: "boxer", concept: "원투 3타는 스트레이트 주먹을 사용하며 공격", attack: "50, 50, 500", health: 3000, range: 250, speed: 13, cost: 8000, cooldown: 50, attackInterval: 4 }
+];
 
     const characterImages = {};
 
