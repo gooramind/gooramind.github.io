@@ -160,25 +160,25 @@
             characterData.forEach((character, index) => {
                 const cardX = 100 + (index % 6) * 120;
                 const cardY = 200 + Math.floor(index / 6) * 120;
-
-        if (x > cardX && x < cardX + 100 && y > cardY && y < cardY + 100) {
-            tooltip.style.display = "block";
-            tooltip.style.left = ${e.pageX + 10}px;
-            tooltip.style.top = ${e.pageY + 10}px;
-            tooltip.innerHTML = 
-                <strong>${character.name}</strong><br>
-                컨셉: ${character.concept}<br>
-                공격력: ${character.attack}<br>
-                체력: ${character.health}<br>
-                사거리: ${character.range}<br>
-                이동속도: ${character.speed}<br>
-                코스트: ${character.cost}원<br>
-                쿨타임: ${character.cooldown}s<br>
-                공격간격: ${character.attackInterval}s
-            ;
-        }
-    });
-}
-
+    
+            if (x > cardX && x < cardX + 100 && y > cardY && y < cardY + 100) {
+                tooltip.style.display = "block";
+                tooltip.style.left = ${e.pageX + 10}px;
+                tooltip.style.top = ${e.pageY + 10}px;
+                tooltip.innerHTML = 
+                    <strong>${character.name}</strong><br>
+                    컨셉: ${character.concept}<br>
+                    공격력: ${character.attack}<br>
+                    체력: ${character.health}<br>
+                    사거리: ${character.range}<br>
+                    이동속도: ${character.speed}<br>
+                    코스트: ${character.cost}원<br>
+                    쿨타임: ${character.cooldown}s<br>
+                    공격간격: ${character.attackInterval}s
+                ;
+            }
+        });
+    }
+});
     loadImages(drawStartScreen);
 </script>
