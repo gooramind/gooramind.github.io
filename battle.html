@@ -123,10 +123,6 @@
             }
         }
 
-        function spawnCharacter(card) {
-            console.log(`${card.name} 소환!`);
-        }
-
         function updateGold() {
             gold += 30;
             updateGoldDisplay();
@@ -160,20 +156,49 @@
             });
         }
 
+        let spawnedCharacters = []; // 소환된 캐릭터 목록
+        let enemyCharacters = []; // 적 캐릭터 목록
+        
+        let backgroundX = 0;
+        const allyCastleX = 50; // 아군 성 X 좌표
+        const allyCastleY = 300; // 아군 성 Y 좌표
+        
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+            // 배경 및 성 그리기
             drawBackground();
             drawCastles();
+        
+            // 소환된 캐릭터 그리기 및 이동
+            spawnedCharacters.forEach(character => {
+                const img = new Image();
+                img.src = character.img;
+                ctx.drawImage(img, character.x, character.y, 50, 50);
+                character.x += character.speed * 0.1; // 캐릭터 이동
+            });
+        
+            // 적 캐릭터 그리기 및 이동 (예시)
+            enemyCharacters.forEach(character => {
+                const img = new Image();
+                img.src = character.img;
+                ctx.drawImage(img, character.x, character.y, 50, 50);
+                character.x -= character.speed * 0.1; // 적 캐릭터 이동
+            });
+        
+            // 쿨타임 및 골드 업데이트
             updateCooldowns();
+            updateGoldDisplay();
         }
-
-        let backgroundX = 0;
+        
+        // 배경 그리기
         function drawBackground() {
             backgroundX -= 1;
             ctx.fillStyle = "lightblue";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "green";
             ctx.fillRect(0, 300, canvas.width, 100);
+        
             ctx.save();
             ctx.translate(backgroundX, 0);
             for (let i = 0; i < 20; i++) {
@@ -181,16 +206,75 @@
                 ctx.fillRect(200 * i, 250, 50, 50);
             }
             ctx.restore();
+        
             if (backgroundX <= -200) backgroundX = 0;
         }
-
+        
+        // 성 그리기
         function drawCastles() {
             ctx.fillStyle = "black";
-            ctx.fillRect(50, 200, 50, 100);
+            ctx.fillRect(50, 250, 50, 100); // 아군 성
             ctx.fillStyle = "red";
-            ctx.fillRect(canvas.width - 100, 200, 50, 100);
+            ctx.fillRect(canvas.width - 100, 250, 50, 100); // 적군 성
         }
-
+        
+        // 캐릭터 소환 함수
+        function spawnCharacter(card) {
+            console.log(`${card.name} 소환!`);
+            spawnedCharacters.push({
+                name: card.name,
+                img: card.img,
+                x: allyCastleX, // 아군 성에서 시작
+                y: allyCastleY,
+                speed: card.speed,
+                health: card.health,
+                attack: card.attack,
+                range: card.range
+            });
+        }
+        
+        // 적 캐릭터 소환 함수 (예시)
+        function spawnEnemyCharacter(card) {
+            console.log(`적 캐릭터 ${card.name} 소환!`);
+            enemyCharacters.push({
+                name: card.name,
+                img: card.img,
+                x: canvas.width - 100, // 적군 성에서 시작
+                y: allyCastleY,
+                speed: card.speed,
+                health: card.health,
+                attack: card.attack,
+                range: card.range
+            });
+        }
+        
+        // 골드 업데이트
+        let gold = 0;
+        function updateGold() {
+            gold += 30; // 초당 30 골드 추가
+            updateGoldDisplay();
+        }
+        
+        // 골드 표시 업데이트
+        function updateGoldDisplay() {
+            document.getElementById("gold-display").textContent = `골드: ${gold}`;
+        }
+        
+        // 쿨타임 업데이트
+        function updateCooldowns() {
+            cards.forEach(card => {
+                if (card.cooldownTimeLeft > 0) {
+                    card.cooldownTimeLeft -= 0.1; // 쿨타임 감소
+                    const cooldownRatio = card.cooldownTimeLeft / card.cooldown;
+                    card.element.querySelector(".cooldown-bar div").style.width = `${cooldownRatio * 100}%`;
+                    if (card.cooldownTimeLeft <= 0) {
+                        card.cooldownTimeLeft = 0;
+                    }
+                }
+            });
+        }
+        
+        // 게임 루프 실행
         setInterval(updateGold, 1000);
         setInterval(gameLoop, 100);
     </script>
