@@ -76,28 +76,45 @@
         // localStorage에서 덱 데이터 가져오기
         let selectedDeck = JSON.parse(localStorage.getItem("selectedDeck")) || [];
 
-        // 선택된 덱 데이터를 cards 배열로 변환
+               // 선택된 덱 데이터를 cards 배열로 변환
         let cards = selectedDeck.map(card => ({
             name: card.name,
             cost: card.cost,
             cooldown: card.cooldown,
-            img: 'img/${card.imageName}.webp', // 이미지 경로 생성
+            attack: card.attack, // 공격력 추가
+            health: card.health, // 체력 추가
+            range: card.range, // 사거리 추가
+            speed: card.speed, // 이동속도 추가
+            attackInterval: card.attackInterval, // 공격간격 추가
+            img: img/${card.imageName}.webp, // 이미지 경로 생성
             isActive: false,
             cooldownTimeLeft: 0
         }));
-
+        
         // UI 설정
         const uiContainer = document.getElementById("ui-container");
         cards.forEach((card, index) => {
             const cardElement = document.createElement("div");
             cardElement.classList.add("card");
-            cardElement.innerHTML = `
+        
+            // UI에 모든 주요 정보 추가
+            cardElement.innerHTML = 
                 <img src="${card.img}" alt="${card.name}">
-                <span>${card.name}</span>
-                <span>${card.cost}원</span>
+                <span><strong>${card.name}</strong></span>
+                <span>공격력: ${card.attack}</span>
+                <span>체력: ${card.health}</span>
+                <span>사거리: ${card.range}</span>
+                <span>속도: ${card.speed}</span>
+                <span>코스트: ${card.cost}원</span>
+                <span>쿨타임: ${card.cooldown}s</span>
+                <span>공격간격: ${card.attackInterval}s</span>
                 <div class="cooldown-bar"><div></div></div>
-            `;
+            ;
+        
+            // 카드 클릭 이벤트 추가
             cardElement.addEventListener("click", () => onCardClick(index));
+        
+            // UI 컨테이너에 추가
             uiContainer.appendChild(cardElement);
             card.element = cardElement;
         });
