@@ -112,7 +112,12 @@
         } else if (currentScreen === "lobby") {
             if (x > 650 && x < 770 && y > 20 && y < 60) {
                 alert("배틀 화면으로 전환됩니다.");
+                // 선택된 덱 데이터를 localStorage에 저장
+                const selectedDeck = deckSlots.filter(slot => slot !== null); // 선택된 캐릭터만 저장
+                localStorage.setItem("selectedDeck", JSON.stringify(selectedDeck));
+                
                 location.href = "battle.html"; // battle.html로 이동
+                return;
             }
 
             for (let i = 0; i < maxDeckSlots; i++) {
