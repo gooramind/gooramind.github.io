@@ -5,7 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Battle</title>
     <style>
-        /* 기존 스타일 유지 */
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #ui-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        .card {
+            width: 80px;
+            height: 100px;
+            background-color: rgba(100, 100, 100, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            font-size: 14px;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        .card img {
+            width: 80%;
+            height: auto;
+            opacity: 0.3; /* 비활성화 상태 */
+        }
+        .card.active img {
+            opacity: 1; /* 활성화 상태 */
+        }
+        .cooldown-bar {
+            width: 100%;
+            height: 5px;
+            background-color: rgba(0, 0, 0, 0.3);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+        .cooldown-bar div {
+            height: 100%;
+            background-color: green;
+        }
+        #gold-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -17,10 +70,11 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
+        // 골드 및 초기 설정
         let gold = 10000; // 시작 골드
         const allyCastleX = 50, allyCastleY = 300;
 
-        // localStorage 데이터 불러오기
+        // localStorage에서 덱 데이터 가져오기
         let selectedDeck = [];
         try {
             selectedDeck = JSON.parse(localStorage.getItem("selectedDeck")) || [];
@@ -29,8 +83,10 @@
             selectedDeck = [];
         }
 
+        // 카드 데이터 처리
         let cards = selectedDeck.map(card => ({
             name: card.name,
+            imageName: card.imageName, // imageName 필드 추가            
             cost: card.cost,
             cooldown: card.cooldown,
             attack: card.attack,
@@ -41,11 +97,12 @@
             cooldownTimeLeft: 0
         }));
 
+        // 이미지 로드
         cards.forEach(card => {
             card.img.src = `img/${card.imageName}.webp`;
         });
 
-        // UI 설정
+        // UI 생성
         const uiContainer = document.getElementById("ui-container");
         cards.forEach((card, index) => {
             const cardElement = document.createElement("div");
@@ -73,6 +130,17 @@
 
         function updateGoldDisplay() {
             document.getElementById("gold-display").textContent = `골드: ${gold}`;
+            updateCardStates();
+        }
+
+        function updateCardStates() {
+            cards.forEach((card) => {
+                if (gold >= card.cost && card.cooldownTimeLeft <= 0) {
+                    card.element.classList.add("active");
+                } else {
+                    card.element.classList.remove("active");
+                }
+            });
         }
 
         function updateCooldowns() {
@@ -85,7 +153,7 @@
             });
         }
 
-        let spawnedCharacters = [];
+        let spawnedCharacters = []; // 소환된 캐릭터 목록
 
         function spawnCharacter(card) {
             spawnedCharacters.push({
@@ -102,18 +170,38 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBackground();
             drawCastles();
+
+            // 소환된 캐릭터 그리기 및 이동
             spawnedCharacters.forEach(character => {
                 ctx.drawImage(character.img, character.x, character.y, 50, 50);
-                character.x += character.speed * 0.1;
+                character.x += character.speed * 0.1; // 캐릭터 이동
             });
+
             updateCooldowns();
         }
 
-        function drawBackground() { /* 기존 배경 그리기 */ }
-        function drawCastles() { /* 기존 성 그리기 */ }
+        function drawBackground() {
+            ctx.fillStyle = "lightblue";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "green";
+            ctx.fillRect(0, 300, canvas.width, 100);
+        }
 
+        function drawCastles() {
+            ctx.fillStyle = "black";
+            ctx.fillRect(50, 250, 50, 100); // 아군 성
+            ctx.fillStyle = "red";
+            ctx.fillRect(canvas.width - 100, 250, 50, 100); // 적군 성
+        }
+
+        // 골드 자동 증가
+        setInterval(() => {
+            gold += 30;
+            updateGoldDisplay();
+        }, 1000);
+
+        // 게임 루프 실행
         setInterval(gameLoop, 100);
-        setInterval(() => { gold += 30; updateGoldDisplay(); }, 1000);
     </script>
 </body>
 </html>
