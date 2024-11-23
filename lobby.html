@@ -22,7 +22,8 @@
         { name: "폭주족", imageName: "biker", concept: "오토바이로 적을 들이박음", attack: 700, health: 1000, range: "150 ~ 0", speed: 20, cost: 4000, cooldown: 8, attackInterval: 30 },
         { name: "사이언티스트", imageName: "scientist", concept: "약품을 흔들며 주변에 초록 빛이 돔", attack: 0, health: 800, range: 10, speed: 2, cost: 5000, cooldown: 0.5, attackInterval: 40 },
         { name: "복서", imageName: "boxer", concept: "원투 3타는 스트레이트 주먹을 사용하며 공격", attack: "50, 50, 500", health: 3000, range: 250, speed: 13, cost: 8000, cooldown: 50, attackInterval: 4 }
-];
+    ];
+
 
     const characterImages = {};
 
@@ -113,7 +114,6 @@
             if (x > 650 && x < 770 && y > 20 && y < 60) {
                 alert("배틀 화면으로 전환됩니다.");
                 // 선택된 덱 데이터를 localStorage에 저장
-                const selectedDeck = deckSlots.filter(slot => slot !== null); // 선택된 캐릭터만 저장
                 const selectedDeck = deckSlots
                     .filter(slot => slot !== null) // null 값 제거
                     .map(slot => ({
@@ -128,7 +128,9 @@
                         cooldown: slot.cooldown, // 쿨타임 추가
                         attackInterval: slot.attackInterval // 공격간격 추가
                     }));
+                localStorage.setItem("selectedDeck", JSON.stringify(selectedDeck));
                 console.log(localStorage.getItem("selectedDeck"));
+
                 location.href = "battle.html"; // battle.html로 이동
                 return;
             }
@@ -156,29 +158,30 @@
         const y = e.offsetY;
         tooltip.style.display = "none";
 
-       if (currentScreen === "lobby") {
+        if (currentScreen === "lobby") {
             characterData.forEach((character, index) => {
                 const cardX = 100 + (index % 6) * 120;
                 const cardY = 200 + Math.floor(index / 6) * 120;
-    
-            if (x > cardX && x < cardX + 100 && y > cardY && y < cardY + 100) {
-                tooltip.style.display = "block";
-                tooltip.style.left = ${e.pageX + 10}px;
-                tooltip.style.top = ${e.pageY + 10}px;
-                tooltip.innerHTML = 
-                    <strong>${character.name}</strong><br>
-                    컨셉: ${character.concept}<br>
-                    공격력: ${character.attack}<br>
-                    체력: ${character.health}<br>
-                    사거리: ${character.range}<br>
-                    이동속도: ${character.speed}<br>
-                    코스트: ${character.cost}원<br>
-                    쿨타임: ${character.cooldown}s<br>
-                    공격간격: ${character.attackInterval}s
-                ;
-            }
-        });
-    }
+        
+                if (x > cardX && x < cardX + 100 && y > cardY && y < cardY + 100) {
+                    tooltip.style.display = "block";
+                    tooltip.style.left = `${e.pageX + 10}px`;
+                    tooltip.style.top = `${e.pageY + 10}px`;
+                    tooltip.innerHTML = `
+                        <strong>${character.name}</strong><br>
+                        컨셉: ${character.concept}<br>
+                        공격력: ${character.attack}<br>
+                        체력: ${character.health}<br>
+                        사거리: ${character.range}<br>
+                        이동속도: ${character.speed}<br>
+                        코스트: ${character.cost}원<br>
+                        쿨타임: ${character.cooldown}s<br>
+                        공격간격: ${character.attackInterval}s
+                    `;
+                }
+            });
+        }
 });
-    loadImages(drawStartScreen);
+
+loadImages(drawStartScreen);
 </script>
