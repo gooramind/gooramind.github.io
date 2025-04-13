@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QwerFighter - Space Shooting Game</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background-color: #121212; 
+            font-family: Arial, sans-serif;
+        }
+        #login-container { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            color: white;
+        }
+        #game-container { 
+            position: relative; 
+            display: none; 
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        canvas { 
+            display: block; 
+            margin: 0 auto; 
+            border: 2px solid #444;
+            box-shadow: 0 0 20px rgba(0, 0, 255, 0.3);
+        }
+        #google-login-btn { 
+            padding: 12px 24px; 
+            font-size: 16px; 
+            background-color: #4285F4; 
+            color: white; 
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: background-color 0.3s;
+        }
+        #google-login-btn:hover {
+            background-color: #3367D6;
+        }
+        #guest-login-btn {
+            padding: 12px 24px; 
+            font-size: 16px; 
+            background-color: #757575; 
+            color: white; 
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: background-color 0.3s;
+        }
+        #guest-login-btn:hover {
+            background-color: #616161;
+        }
+        .login-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #user-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        #loading-message {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        #logout-btn {
+            color: #4285F4;
+            text-decoration: underline;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .game-title {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #4285F4;
+            text-shadow: 0 0 10px rgba(66, 133, 244, 0.7);
+        }
+        .game-subtitle {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #ccc;
+        }
+        #controls-info {
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 5px;
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #4285F4;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="login-container">
+        <h1 class="game-title">QwerFighter</h1>
+        <p class="game-subtitle">우주 슈팅 게임에 오신 것을 환영합니다!</p>
+        <div class="login-buttons">
+            <button id="google-login-btn">Google로 로그인</button>
+            <button id="guest-login-btn">게스트로 입장</button>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div id="user-info">
+            <div id="user-name"></div>
+            <div id="high-score"></div>
+            <div id="logout-btn">로그아웃</div>
+        </div>
+        
+        <div id="loading-message">게임 로딩 중... <div class="loading-spinner"></div></div>
+        <canvas id="game-canvas"></canvas>
+        
+        <div id="controls-info">
+            조작방법:<br>
+            화살표 키: 이동<br>
+            Q: 슈퍼 공격<br>
+            W: 달 공격<br>
+            E: 방어막<br>
+            R: 추적 미사일 (5000점 이상)<br>
+            TAB: 일시정지
+        </div>
+    </div>
+
+    <!-- Firebase SDK를 모듈 방식으로 임포트 -->
+    <script type="module">
+      // Firebase 앱 SDK와 필요한 기능 임포트
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+      import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+      import { getFirestore, doc, getDoc, setDoc, updateDoc, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+    
+      // Firebase 구성 정보
+      const firebaseConfig = {
+        apiKey: "AIzaSyAH8LI0wbqsxvpmtfBrNmk-xN76YmQIFCE",
+        authDomain: "project-victoria-df000.firebaseapp.com",
+        projectId: "project-victoria-df000",
+        storageBucket: "project-victoria-df000.firebasestorage.app",
+        messagingSenderId: "368940165865",
+        appId: "1:368940165865:web:f98b60e73b935320a5de78",
+        measurementId: "G-XDX4PMX7KB"
+      };
+    
+      // Firebase 초기화
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const provider = new GoogleAuthProvider();
+    
+      // DOM 요소
+      const loginContainer = document.getElementById('login-container');
+      const gameContainer = document.getElementById('game-container');
+      const loginButton = document.getElementById('google-login-btn');
+      const guestLoginButton = document.getElementById('guest-login-btn');
+      const userNameElement = document.getElementById('user-name');
+      const highScoreElement = document.getElementById('high-score');
+      const logoutElement = document.getElementById('logout-btn');
+      
+      // 게스트 로그인 버튼 이벤트
+      guestLoginButton.addEventListener('click', () => {
+        // 게스트 사용자 정보 생성
+        const guestId = 'guest_' + Math.random().toString(36).substring(2, 15);
+        
+        // 게스트 사용자 정보 설정
+        window.currentUser = {
+          uid: guestId,
+          displayName: '게스트',
+          email: null,
+          highScore: 0,
+          isGuest: true
+        };
+        
+        // UI 업데이트
+        loginContainer.style.display = 'none';
+        gameContainer.style.display = 'flex';
+        userNameElement.textContent = '게스트';
+        highScoreElement.textContent = '최고 점수: 0';
+        
+        // 게임 점수 저장 함수 오버라이드 (로컬 저장)
+        window.saveGameScore = function(score) {
+          if (score > (window.currentUser.highScore || 0)) {
+            window.currentUser.highScore = score;
+            highScoreElement.textContent = `최고 점수: ${score}`;
+            
+            // 로컬 스토리지에 게스트 최고 점수 저장 (선택적)
+            localStorage.setItem('guestHighScore', score);
+          }
+        };
+      });
+      
+      // 로그인 버튼 이벤트
+      loginButton.addEventListener('click', () => {
+        signInWithPopup(auth, provider)
+          .catch(error => {
+            console.error('로그인 오류:', error);
+            alert('로그인 중 오류가 발생했습니다.');
+          });
+      });
+      
+      // 로그아웃 버튼 이벤트
+      logoutElement.addEventListener('click', () => {
+        if (window.currentUser && window.currentUser.isGuest) {
+          // 게스트 로그아웃
+          window.currentUser = null;
+          loginContainer.style.display = 'flex';
+          gameContainer.style.display = 'none';
+        } else {
+          // Firebase 로그아웃
+          signOut(auth)
+            .catch(error => {
+              console.error('로그아웃 오류:', error);
+            });
+        }
+      });
+      
+      // 최고 점수 가져오기
+      async function getHighScore(userId) {
+        try {
+          const docRef = doc(db, 'scores', userId);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists() && docSnap.data().highScore) {
+            return docSnap.data().highScore;
+          }
+          return 0;
+        } catch (error) {
+          console.error('점수 가져오기 오류:', error);
+          return 0;
+        }
+      }
+      
+      // 인증 상태 감지
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          // 로그인 성공
+          loginContainer.style.display = 'none';
+          gameContainer.style.display = 'flex';
+          userNameElement.textContent = user.displayName;
+          
+          // 최고 점수 표시
+          const highScore = await getHighScore(user.uid);
+          highScoreElement.textContent = `최고 점수: ${highScore}`;
+          
+          // 게임에서 사용자 정보에 접근할 수 있도록 전역 변수로 저장
+          window.currentUser = {
+            uid: user.uid,
+            displayName: user.displayName,
+            email: user.email,
+            highScore: highScore
+          };
+          
+          // 게임 점수 저장 함수
+          window.saveGameScore = async function(score) {
+            if (!user) return;
+            
+            const userRef = doc(db, 'scores', user.uid);
+            
+            try {
+              // 트랜잭션으로 최고 점수 업데이트
+              const newHighScore = await runTransaction(db, async (transaction) => {
+                const docSnap = await transaction.get(userRef);
+                
+                if (!docSnap.exists()) {
+                  transaction.set(userRef, {
+                    displayName: user.displayName,
+                    highScore: score,
+                    lastScore: score,
+                    timestamp: new Date()
+                  });
+                  return score;
+                }
+                
+                const data = docSnap.data();
+                const highScore = data.highScore || 0;
+                
+                if (score > highScore) {
+                  transaction.update(userRef, { 
+                    highScore: score,
+                    lastScore: score,
+                    timestamp: new Date()
+                  });
+                  return score;
+                } else {
+                  transaction.update(userRef, { 
+                    lastScore: score,
+                    timestamp: new Date()
+                  });
+                  return highScore;
+                }
+              });
+              
+              highScoreElement.textContent = `최고 점수: ${newHighScore}`;
+              window.currentUser.highScore = newHighScore;
+            } catch (error) {
+              console.error('점수 저장 오류:', error);
+            }
+          };
+        } else {
+          // 이미 게스트로 로그인 중이면 로그아웃하지 않음
+          if (!window.currentUser || !window.currentUser.isGuest) {
+            // 로그아웃 상태
+            loginContainer.style.display = 'flex';
+            gameContainer.style.display = 'none';
+            window.currentUser = null;
+          }
+        }
+      });
+    </script>
+
+    <py-config>
+        packages = ["pygame"]
+        [[fetch]]
+        files = ["main.py", "image/fighter.png", "image/badguy.png", "image/boss.png", "image/missile.png", "image/super.png", "image/moon.png", "image/shield.png", "image/heal.png", "image/missile2.png", "image/fireball.png", "image/background.png"]
+    </py-config>
+
+    <py-script>
+        import asyncio
+        import pygame
+        import sys
+        import js
+        from js import window, document
+        from pyodide.ffi import create_proxy
+print("PyScript 초기화 시작...")
+
+    try:
+        # 웹 환경에서 이미지 로딩 함수 (원본 GameObject를 수정하지 않기 위한 헬퍼 함수)
+        def load_image(path, size, colorkey=(0,0,0)):
+            print(f"이미지 로딩 시도: {path}")
+            try:
+                image = pygame.image.load(path).convert()
+                image = pygame.transform.scale(image, size)
+                image.set_colorkey(colorkey)
+                print(f"이미지 로딩 성공: {path}")
+                return image
+            except pygame.error as e:
+                print(f"이미지 로딩 오류: {path} - {e}")
+                # 대체 이미지 생성
+                surf = pygame.Surface(size)
+                surf.fill((255, 0, 255))  # 마젠타색 임시 이미지
+                return surf
+
+        # pygame 초기화
+        print("Pygame 초기화 시도...")
+        pygame.init()
+        print("Pygame 초기화 완료")
+
+        # canvas 요소 가져오기
+        print("Canvas 요소 가져오기...")
+        canvas = document.getElementById("game-canvas")
+
+화면 설정
+        SCREEN_WIDTH = 144 * 4
+        SCREEN_HEIGHT = 288 * 3
+        canvas.width = SCREEN_WIDTH
+        canvas.height = SCREEN_HEIGHT
+
+        # Pygame 화면 설정 (canvas 연결)
+        print("Pygame 화면 설정...")
+        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA, 32, canvas=canvas)
+        print("Pygame 화면 설정 완료")
+
+        # main.py에서 Game 클래스 가져오기
+        print("main.py에서 Game 클래스 로드 시도...")
+        try:
+            from main import Game, pressed_keys
+            print("Game 클래스 로드 성공")
+        except Exception as e:
+            print(f"Game 클래스 로드 실패: {e}")
+            raise
+
+        # 웹에서의 키 입력 처리를 위한 전역 변수
+        pressed_keys = pygame.key.get_pressed()
+
+        # 게임 오버 시 점수 저장
+        def save_score_to_firebase(score):
+            if hasattr(window, 'saveGameScore') and window.currentUser:
+                window.saveGameScore(score)
+
+        # 메인 게임 객체 생성
+        game = Game()
+        
+        # 로딩 완료 시 메시지 숨기기
+        document.getElementById("loading-message").style.display = "none"
+        
+        # 게임 점수 저장 여부 상태 변수
+        score_saved = False
+        
+        # 키 이벤트 처리를 위한 함수
+        def key_down_handler(event):
+            global pressed_keys
+            # PyGame 키 코드로 변환
+            # 여기서는 주요 키만 처리
+            if event.key == "ArrowLeft":
+                pressed_keys = list(pressed_keys)
+                pressed_keys[pygame.K_LEFT] = True
+                pressed_keys = tuple(pressed_keys)
+            elif event.key == "ArrowRight":
+                pressed_keys = list(pressed_keys)
+                pressed_keys[pygame.K_RIGHT] = True
+                pressed_keys = tuple(pressed_keys)
+            elif event.key == "ArrowUp":
+                pressed_keys = list(pressed_keys)
+                pressed_keys[pygame.K_UP] = True
+                pressed_keys = tuple(pressed_keys)
+            elif event.key == "ArrowDown":
+                pressed_keys = list(pressed_keys)
+                pressed_keys[pygame.K_DOWN] = True
+                pressed_keys = tuple(pressed_keys)
+            elif event.key == "q" or event.key == "Q":
+                # 슈퍼 공격
+                if not game.game_over and not game.paused:
+                    game.fighter.use_super(game.super_attacks)
+            elif event.key == "w" or event.key == "W":
+                # 달 공격
+                if not game.game_over and not game.paused:
+                    game.fighter.use_moon(game.moon_attacks)
+            elif event.key == "e" or event.key == "E":
+                # 방어막
+                if not game.game_over and not game.paused:
+                    game.fighter.shield.activate()
+            elif event.key == "r" or event.key == "R":
+                # 추적 슈퍼 공격
+                if not game.game_over and not game.paused and game.score >= 5000:
+                    game.fighter.use_tracking_super(game.tracking_super_attacks, game.badguys)
+            elif event.key == "Tab":
+                # 일시 정지
+                game.paused = not game.paused
+            elif event.key == "Enter" or event.key == " ":
+                # 게임 재시작
+                if game.game_over:
+                    global score_saved
+                    score_saved = False
+                    game.reset()
+
+        def key_up_handler(event):
+            global pressed_keys
+            if event.key == "ArrowLeft":
+                pressed_keys = list(pressed_keys)
+                pressed_keys[pygame.K_LEFT] = False
+                pressed_keys = tuple(pressed_keys)
+            elif event.key == "ArrowRight":
+                pressed_keys = list(pressed_keys)
+                pressed_keys[pygame.K_RIGHT] = False
+                pressed_keys = tuple(pressed_keys)
+            elif event.key == "ArrowUp":
+                pressed_keys = list(pressed_keys)
+                pressed_keys[pygame.K_UP] = False
+                pressed_keys = tuple(pressed_keys)
+            elif event.key == "ArrowDown":
+                pressed_keys = list(pressed_keys)
+                pressed_keys[pygame.K_DOWN] = False
+                pressed_keys = tuple(pressed_keys)
+        
+        # 키 이벤트 리스너 등록
+        key_down_proxy = create_proxy(key_down_handler)
+        key_up_proxy = create_proxy(key_up_handler)
+        
+        document.addEventListener("keydown", key_down_proxy)
+        document.addEventListener("keyup", key_up_proxy)
+        
+        # 비동기 게임 루프
+        async def game_loop():
+            global score_saved
+            clock = pygame.time.Clock()
+            
+            while True:
+                clock.tick(60)
+                
+                # 게임 이벤트 처리 (키 이벤트는 별도로 처리)
+                for event in pygame.event.get():
+                    # 필요한 이벤트가 있다면 여기서 처리
+                    pass
+                
+                # 게임 상태 업데이트
+                if not game.game_over and not game.paused:
+                    game.update()
+                
+                # 화면 렌더링
+                game.render()
+                
+                # 게임 오버 시 점수 저장 (한 번만)
+                if game.game_over and not score_saved:
+                    save_score_to_firebase(game.score)
+                    score_saved = True
+                
+                # 브라우저가 응답할 수 있도록 짧은 대기 추가
+                await asyncio.sleep(0.001)
+        
+        # 게임 루프 시작
+        asyncio.ensure_future(game_loop())
+        
+        except Exception as e:
+        print(f"초기화 중 오류 발생: {e}")
+        document.getElementById("loading-message").innerHTML = f"게임 로딩 중 오류 발생: {e}"
+    </py-script>
+</body>
+</html>
